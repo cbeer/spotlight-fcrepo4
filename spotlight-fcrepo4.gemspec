@@ -6,7 +6,7 @@ require "spotlight/fcrepo4/version"
 # Describe your gem and declare its dependencies:
 Gem::Specification.new do |s|
   s.name        = "spotlight-fcrepo4"
-  s.version     = "0.0.1"
+  s.version     = Spotlight::Fcrepo4::VERSION
   s.authors     = ["Chris Beer"]
   s.email       = ["cabeer@stanford.edu"]
   s.homepage    = "https://github.com/cbeer/spotlight-fcrepo4"
@@ -14,9 +14,9 @@ Gem::Specification.new do |s|
   s.files = Dir["{app,config,db,lib}/**/*", "Rakefile", "README.md"]
   s.test_files = Dir["spec/**/*"]
 
-  s.add_dependency "rails", "~> 4.0.1"
+  s.add_dependency "rails"
   s.add_dependency "blacklight", ">= 5.4.0.rc1", "<6"
-  s.add_dependency "spotlight"
+  s.add_dependency "blacklight-spotlight"
   s.add_dependency "activeresource-ldp"
 
   s.add_development_dependency "sqlite3"

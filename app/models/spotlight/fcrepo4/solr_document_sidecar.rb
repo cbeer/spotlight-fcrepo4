@@ -1,31 +1,22 @@
 module Spotlight::Fcrepo4
-  class SolrDocumentSidecar < ActiveResource::Ldp::Base
-    self.site = Spotlight::Fcrepo4::Engine.config.site
-    belongs_to :exhibit
-    belongs_to :solr_document
+  class SolrDocumentSidecar < Annotation
+    self.site = Spotlight::Fcrepo4.site
 
-    delegate :has_key?, to: :attributes
+    delegate :has_key?, to: :body
 
     alias_method :ar_update, :update
-    
-    schema do
-      attribute :tags, :string, predicate: RDF::URL(":exhibit_url#tags")
-    end
-    
+
     before_save do
-      schema[:tags][:predicate] = RDF::URL(Spotlight::Engine.routes.url_helpers.exhibit_url(exhibit) +"#tags")
+      self.motivated_by ||= RDF::URI("http://www.w3.org/ns/oa#describing")
     end
 
     def update attributes = {}
       if attributes.empty?
         ar_update
       else
-        schema do
-          (attributes.keys - known_attributes).each do |k|
-            attribute k, :string, predicate: RDF::URI(Spotlight::Engine.routes.url_helpers.exhibit_url(exhibit) + "#" + k)
-          end
-        end
-        update_attributes attributes
+        self.body ||= self.body.build
+        self.body.content_attributes.merge(attributes)
+        self.body.save
       end
     end
 
@@ -37,16 +28,15 @@ module Spotlight::Fcrepo4
       update public: true
     end
 
-    protected
-
-    def visibility_field
-      Spotlight::SolrDocument.visibility_field(exhibit)
-    end
   end
 end
 
 ActsAsTaggableOn::Tagging.after_save do |obj|
-  sidecar = Spotlight::Fcrepo4::SolrDocumentSidecar.find_or_initialize_by solr_document: obj.taggable, exhibit: obj.tagger
-  sidecar.tags += obj.tag.name
-  sidecar.save
+  # should be: ^oa:hasTarget[oa:motivatedBy is oa:tagging] / .[dcterms:isPartOf is <http://localhost:8081/exhibit>] / oa:hasBody / rdfs:label :: xsd:string ;
+
+  tags = obj.taggable.sidecar(obj.tagger)
+  tags.body ||= tags.body.build
+  tags.body.content_attributes[:tags] ||= []
+  tags.body.content_attributes[:tags] << obj.tags.name
+  tags.save
 end
