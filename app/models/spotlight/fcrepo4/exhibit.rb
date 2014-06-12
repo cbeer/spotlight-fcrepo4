@@ -9,10 +9,14 @@ module Spotlight::Fcrepo4
       self.rdf_type << RDF::URI("https://github.com/sul-dlss/spotlight#Exhibit") 
     end
 
+    before_create do
+      self.solr_url ||= Blacklight.solr.url
+    end
+
     schema do
       attribute :rdf_type, :uri, predicate: RDF.type
-      attribute :exhibit_url, :uri, predicate: OWL.sameAs
-      attribute :solr_url, :url, predicate: RDF::URI("http://library.stanford.edu/dlss/dor/indexer#isIndexedTo")
+      attribute :exhibit_url, :uri, predicate: RDF::OWL.sameAs
+      attribute :solr_url, :uri, predicate: RDF::URI("http://library.stanford.edu/dlss/dor/indexer#isIndexedTo")
       attribute :ldpath_program_id, :uri, predicate: RDF::URI("http://library.stanford.edu/dlss/dor/indexer#hasService")
     end
 
@@ -20,7 +24,7 @@ module Spotlight::Fcrepo4
       def find_or_initialize_by opts = {}
         result = sparql.select("subject").where(
           [:subject, RDF.type, RDF::URI("https://github.com/sul-dlss/spotlight#Exhibit")],
-          [:subject, OWL.sameAs, RDF::URI(opts[:exhibit_url])]
+          [:subject, RDF::OWL.sameAs, RDF::URI(opts[:exhibit_url])]
         ).each_solution.first
 
         if result && self.exists?(result[:subject])

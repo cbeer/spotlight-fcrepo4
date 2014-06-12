@@ -5,7 +5,7 @@ module Spotlight::Fcrepo4::ExhibitLdpath
     after_touch do
       repository_object.ldpath_program ||= repository_object.build_ldpath_program
       repository_object.ldpath_program.data_chars = program
-      repository_object.ldpath_program.save
+      repository_object.save
     end  
   end
 
